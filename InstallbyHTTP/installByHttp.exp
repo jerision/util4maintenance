@@ -1,0 +1,35 @@
+#!/usr/bin/expect
+set timeout 30
+set time 30
+set IP [lrange $argv 0 0]
+set PORT [lrange $argv 1 1]
+set PASSWD [lrange $argv 2 2]
+set ID [lrange $argv 3 3]
+#spawn echo $IP
+#spawn echo $PASSWD
+
+spawn ssh root@$IP -p $PORT
+
+expect {
+        "*yes*" {
+                send "yes\r"
+                expect {
+                        "assword" {
+                        send "$PASSWD\r"
+                        }
+                }
+        }
+        "assword" {
+        send "$PASSWD\r"
+        }
+}
+
+expect "*#*" {
+    send "wget -q http://127.0.0.1:8001/robot.tar.gz;tar zxf robot.tar.gz;cd robot; sh install $ID";(python start_robot.py &)\r"
+    send "sed -i \"/robot/d\" /etc/rc.local\r"
+    send "sed -i \"/robot/d\" /etc/rc.d/rc.local\r"
+    send "echo \"cd /work/robot/; /usr/bin/python start_robot.py &\" >> /etc/rc.d/rc.local\r"
+ }
+
+send "exit 0\r"
+expect eof

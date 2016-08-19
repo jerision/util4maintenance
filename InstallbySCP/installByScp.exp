@@ -1,0 +1,49 @@
+#!/usr/bin/expect
+set timeout 10
+set host [lindex $argv 0]
+set PORT [lrange $argv 1 1]
+set username "root"
+set password [lindex $argv 2]
+set ID [lrange $argv 3 3]
+
+set src_file "./robot.tar.gz"
+set dest_file "/root/robot.tar.gz"
+
+spawn scp -P $PORT $src_file $username@$host:$dest_file
+expect {
+    "(yes/no)?"
+    {
+        send "yes\n"
+        expect "*assword:" { send "$password\n"}
+    }
+    "*assword:"
+   {
+        send "$password\n"
+   }
+}
+expect "100%"
+
+spawn ssh root@$IP -p $PORT
+expect {
+        "*yes*" {
+                send "yes\r"
+                expect {
+                        "assword" {
+                        send "$PASSWD\r"
+                        }
+                }
+        }
+        "assword" {
+        send "$PASSWD\r"
+        }
+}
+
+expect "*#*" {
+    send "tar zxf $dest_file;cd robot; sh install $ID";(python start_robot.py &)\r"
+    send "sed -i \"/robot/d\" /etc/rc.local\r"
+    send "sed -i \"/robot/d\" /etc/rc.d/rc.local\r"
+    send "echo \"cd /work/robot/; /usr/bin/python start_robot.py &\" >> /etc/rc.d/rc.local\r"
+ }
+
+send "exit 0\r"
+expect eof
